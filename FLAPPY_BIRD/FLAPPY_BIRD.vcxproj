@@ -146,18 +146,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\glad\src\glad.c" />
-    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="SpriteRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment_shader.glsl" />
     <None Include="vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Component.h" />
-    <ClInclude Include="GameObject.h" />
-    <ClInclude Include="SpriteRenderer.h" />
+    <ClInclude Include="Bird.h" />
+    <ClInclude Include="Pillar.h" />
+    <ClInclude Include="Sprite.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
