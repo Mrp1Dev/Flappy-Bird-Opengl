@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "SpriteRenderer.h"
+#include "GameObject.h"
+#include "Component.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -35,49 +37,50 @@ int main()
 	}
 	glViewport(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-
-	//float vertices[] {
-	//	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, //bootm left
-	//	0.0f, 0.5f, 0.0f,   0.0f, 1.0f, 0.0f,//top
-	//	0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,//bottom right
-	//};
-
-	//unsigned int VAO;
-	//glGenVertexArrays(1, &VAO);
-	//unsigned int VBO;
-	//glGenBuffers(1, &VBO);
-
-
-	//glBindVertexArray(VAO);
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//glBufferData(
-	//	GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-	////vertices
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, nullptr);
-	//glEnableVertexAttribArray(0);
-	////color attribs
-	//glVertexAttribPointer(
-	//	1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 3));
-	//glEnableVertexAttribArray(1);
-
-
 	Shader shader = Shader("vertex_shader.glsl", "fragment_shader.glsl");
-	mrp1::SpriteRenderer renderer(
-		glm::vec2(400, 300),
-		glm::vec2(BASE_WIDTH
-			, 100),
-		&shader,
-		glm::vec4(1, 1, 1, 1));
+
 	glm::mat4 projection { glm::ortho(
 		0.0f, (float)BASE_WIDTH, 0.0f, (float)BASE_HEIGHT , -1.0f, 1.0f) };
+
+	mrp1::GameObject bird {};
+
+	mrp1::SpriteRenderer spriteRenderer(
+		projection,
+		glm::vec2(200, BASE_HEIGHT / 2),
+		glm::vec2(30, 30),
+		&shader,
+		glm::vec4(0.2f, 0.7f, 1.0f, 1.0f));
+
+	bird.components.emplace_back(
+		std::make_unique<mrp1::SpriteRenderer>(spriteRenderer));
+
+	mrp1::GameObject bird_2 {};
+
+	mrp1::SpriteRenderer spriteRenderer_2(
+		projection,
+		glm::vec2(350, BASE_HEIGHT / 2),
+		glm::vec2(30, 30),
+		&shader,
+		glm::vec4(0.2f, 0.7f, 1.0f, 1.0f));
+
+	bird_2.components.emplace_back(
+		std::make_unique<mrp1::SpriteRenderer>(spriteRenderer_2));
+
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
 
 		glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
 		glClear(GL_COLOR_BUFFER_BIT);
-		renderer.render(projection);
-		
+		try
+		{
+			bird.update_components();
+			bird_2.update_components();
+		}
+		catch (std::exception e)
+		{
+			std::cout << e.what() << '\n';
+		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
