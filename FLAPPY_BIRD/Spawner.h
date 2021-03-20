@@ -42,7 +42,6 @@ public:
 					i == 0 ?
 					HEIGHT - (pillar_size.y / 2.0f - PILLAR_GAP / 2.0f)
 					: (pillar_size.y / 2.0f - PILLAR_GAP / 2.0f);
-
 				spawned.emplace_back(
 					Pillar(glm::vec2(x_pos, y_pos),
 						pillar_size,
@@ -57,5 +56,11 @@ public:
 	std::vector<Pillar>* spawned_pillars()
 	{
 		return &spawned;
+	}
+
+	void reset()
+	{
+		spawned.clear();
+		last_pillar = nullptr;
 	}
 };

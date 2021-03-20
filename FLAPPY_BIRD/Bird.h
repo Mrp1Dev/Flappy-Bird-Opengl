@@ -33,7 +33,7 @@ public:
 
 		bool collisionX = pos.x < other_pos.x + other->size.x  &&
 			pos.x + size.x  > other_pos.x;
-		std::cout << "Collision on X!\n";
+
 		bool collisionY = pos.y < other_pos.y + other->size.y &&
 			pos.y + size.y > other_pos.y;
 		

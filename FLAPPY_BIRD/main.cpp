@@ -13,112 +13,109 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, Bird* bird);
 void init_opengl();
+void restart_game(Spawner* spawner, Bird* bird);
 
 static const float GRAVITY { 1000.0f };
 static const int WIDTH { 1344 };
 static const int HEIGHT { 756 };
 constexpr float CLEAR_COLOR[4] { 10.0f / 255.0f, 14.0f / 255.0f, 20.0f / 255.0f, 1.0f };
 const glm::vec4 BIRD_COLOR { 89.0f / 255.0f, 194.0f / 255.0f, 255.0f / 255.0f, 1.0f };
+const Bird STARTING_BIRD(
+	glm::vec2(WIDTH / 4, HEIGHT / 2),
+	glm::vec2(30, 30),
+	BIRD_COLOR,
+	75.0f);
 
 enum class GameState
 {
 	Started,
-	Running,
-	Ended
+	Running
 };
 
 GameState game_state { GameState::Started };
 
 int main()
 {
-	try
+	srand(glfwGetTime());
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "First Project", nullptr, nullptr);
+	if (window == nullptr)
 	{
-		glfwInit();
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		std::cout << "Failed to create GLFW Window.\n";
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD\n";
+		return -1;
+	}
+	glViewport(0, 0, WIDTH, HEIGHT);
 
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-		GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "First Project", nullptr, nullptr);
-		if (window == nullptr)
+	init_opengl();
+
+	Shader shader = Shader("vertex_shader.glsl", "fragment_shader.glsl");
+
+	glm::mat4 projection { glm::ortho(
+		0.0f, (float)WIDTH, 0.0f, (float)HEIGHT , -1.0f, 1.0f) };
+
+
+	std::unique_ptr<Bird> bird = std::make_unique<Bird>(
+		STARTING_BIRD
+		);
+	std::unique_ptr<Spawner> spawner = std::make_unique<Spawner>(
+		60.0f,
+		250.0f,
+		380.0f,
+		320.0f
+		);
+	float last_frame_time = glfwGetTime();
+	float last_pillar_pos { 0.0f };
+
+	while (!glfwWindowShouldClose(window))
+	{
+		float delta_time = glfwGetTime() - last_frame_time;
+		last_frame_time = glfwGetTime();
+		//std::cout << roundf(1.0f / delta_time) << '\n';
+		processInput(window, bird.get());
+
+		glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
+		glClear(GL_COLOR_BUFFER_BIT);
+		shader.set_mat4("projection", projection);
+
+		if (game_state == GameState::Running)
 		{
-			std::cout << "Failed to create GLFW Window.\n";
-			glfwTerminate();
-			return -1;
-		}
-		glfwMakeContextCurrent(window);
-		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-		{
-			std::cout << "Failed to initialize GLAD\n";
-			return -1;
-		}
-		glViewport(0, 0, WIDTH, HEIGHT);
-
-		init_opengl();
-
-		Shader shader = Shader("vertex_shader.glsl", "fragment_shader.glsl");
-
-		glm::mat4 projection { glm::ortho(
-			0.0f, (float)WIDTH, 0.0f, (float)HEIGHT , -1.0f, 1.0f) };
-
-
-		std::unique_ptr<Bird> bird = std::make_unique<Bird>(
-			glm::vec2(WIDTH / 4, HEIGHT / 2),
-			glm::vec2(30, 30),
-			BIRD_COLOR,
-			75.0f
-			);
-		std::unique_ptr<Spawner> spawner = std::make_unique<Spawner>(
-			60.0f,
-			155.0f,
-			380.0f,
-			320.0f
-			);
-		float last_frame_time = glfwGetTime();
-		float last_pillar_pos { 0.0f };
-
-		while (!glfwWindowShouldClose(window))
-		{
-			float delta_time = glfwGetTime() - last_frame_time;
-			last_frame_time = glfwGetTime();
-			//std::cout << roundf(1.0f / delta_time) << '\n';
-			processInput(window, bird.get());
-
-			glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
-			glClear(GL_COLOR_BUFFER_BIT);
-			shader.set_mat4("projection", projection);
-
-			if (game_state == GameState::Running)
-			{
-				for (auto& pillar : *spawner->spawned_pillars())
-				{
-					bool collided = bird->check_collision(&pillar);
-					if (collided)
-					{
-						game_state = GameState::Ended;
-					}
-					pillar.update(delta_time);
-				}
-				bird->update(delta_time);
-				spawner->update();
-			}
-
-			bird->render(&shader);
+			bird->update(delta_time);
+			spawner->update();
 			for (auto& pillar : *spawner->spawned_pillars())
 			{
-				pillar.render(&shader);
+				pillar.update(delta_time);
+				bool collided = bird->check_collision(&pillar);
+				if (collided)
+				{
+					restart_game(spawner.get(), bird.get());
+				}
 			}
-
-			glfwSwapBuffers(window);
-			glfwPollEvents();
 		}
 
-		glfwTerminate();
+		bird->render(&shader);
+		for (auto& pillar : *spawner->spawned_pillars())
+		{
+			pillar.render(&shader);
+		}
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
-	catch (std::exception e)
-	{
-		std::cout << "ERROR: " << e.what() << '\n';
-	}
+
+	glfwTerminate();
+
 	return 0;
 }
 
@@ -177,6 +174,13 @@ void init_opengl()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 
+}
+
+void restart_game(Spawner* spawner, Bird* bird)
+{
+	game_state = GameState::Started;
+	spawner->reset();
+	*bird = STARTING_BIRD;
 }
 
 
