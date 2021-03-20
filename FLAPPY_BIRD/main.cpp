@@ -9,6 +9,7 @@
 #include "Pillar.h"
 #include <vector>
 #include "Spawner.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, Bird* bird);
 void init_opengl();
@@ -18,6 +19,15 @@ static const int WIDTH { 1344 };
 static const int HEIGHT { 756 };
 constexpr float CLEAR_COLOR[4] { 10.0f / 255.0f, 14.0f / 255.0f, 20.0f / 255.0f, 1.0f };
 const glm::vec4 BIRD_COLOR { 89.0f / 255.0f, 194.0f / 255.0f, 255.0f / 255.0f, 1.0f };
+
+enum class GameState
+{
+	Started,
+	Running,
+	Ended
+};
+
+GameState game_state { GameState::Started };
 
 int main()
 {
@@ -62,7 +72,7 @@ int main()
 			60.0f,
 			155.0f,
 			380.0f,
-			350.0f
+			320.0f
 			);
 		float last_frame_time = glfwGetTime();
 		float last_pillar_pos { 0.0f };
@@ -71,21 +81,33 @@ int main()
 		{
 			float delta_time = glfwGetTime() - last_frame_time;
 			last_frame_time = glfwGetTime();
-			std::cout << roundf(1.0f / delta_time) << '\n';
+			//std::cout << roundf(1.0f / delta_time) << '\n';
 			processInput(window, bird.get());
 
 			glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
 			glClear(GL_COLOR_BUFFER_BIT);
 			shader.set_mat4("projection", projection);
 
-			bird->update(delta_time);
-			spawner->update();
+			if (game_state == GameState::Running)
+			{
+				for (auto& pillar : *spawner->spawned_pillars())
+				{
+					bool collided = bird->check_collision(&pillar);
+					if (collided)
+					{
+						game_state = GameState::Ended;
+					}
+					pillar.update(delta_time);
+				}
+				bird->update(delta_time);
+				spawner->update();
+			}
+
+			bird->render(&shader);
 			for (auto& pillar : *spawner->spawned_pillars())
 			{
-				pillar.update(delta_time);
 				pillar.render(&shader);
 			}
-			bird->render(&shader);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
@@ -114,7 +136,14 @@ void processInput(GLFWwindow* window, Bird* bird)
 
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
-		bird->flap();
+		if (game_state == GameState::Started)
+		{
+			game_state = GameState::Running;
+		}
+		else if (game_state == GameState::Running)
+		{
+			bird->flap();
+		}
 	}
 }
 
