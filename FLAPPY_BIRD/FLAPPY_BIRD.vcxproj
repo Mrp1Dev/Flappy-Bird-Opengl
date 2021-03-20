@@ -155,6 +155,8 @@
   <ItemGroup>
     <ClInclude Include="Bird.h" />
     <ClInclude Include="Pillar.h" />
+    <ClInclude Include="random.h" />
+    <ClInclude Include="Spawner.h" />
     <ClInclude Include="Sprite.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
