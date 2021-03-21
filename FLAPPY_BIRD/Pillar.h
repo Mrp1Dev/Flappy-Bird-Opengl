@@ -8,7 +8,7 @@ public:
 	explicit Pillar(glm::vec2 pos, glm::vec2 size, glm::vec4 color, float speed)
 		: Sprite { pos, size, color }, speed { speed }{}
 
-	void update(float dt)
+	virtual void update(float dt)
 	{
 		pos.x += -speed * dt;
 	}

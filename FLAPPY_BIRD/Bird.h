@@ -7,6 +7,8 @@ class Bird : public Sprite
 	glm::vec2 velocity { glm::vec2(0.0f) };
 public:
 	float jump_strength { 0.0f };
+	int score { 0 };
+
 	explicit Bird(glm::vec2 pos, glm::vec2 size, glm::vec4 color, float flap_height)
 		: Sprite { pos, size, color }, jump_strength { flap_height }{}
 

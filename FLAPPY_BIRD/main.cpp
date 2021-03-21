@@ -9,6 +9,7 @@
 #include "Pillar.h"
 #include <vector>
 #include "Spawner.h"
+#include "ScoreTrigger.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, Bird* bird);
@@ -84,7 +85,6 @@ int main()
 		last_frame_time = glfwGetTime();
 		//std::cout << roundf(1.0f / delta_time) << '\n';
 		processInput(window, bird.get());
-
 		glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
 		glClear(GL_COLOR_BUFFER_BIT);
 		shader.set_mat4("projection", projection);
@@ -102,12 +102,31 @@ int main()
 					restart_game(spawner.get(), bird.get());
 				}
 			}
+
+			for (auto& trigger : *spawner->spawned_triggers())
+			{
+				trigger.update(delta_time);
+				if (!trigger.scored)
+				{
+					bool collided = bird->check_collision(&trigger);
+					if (collided)
+					{
+						trigger.scored = true;
+						std::cout << bird->score++ << '\n';
+					}
+				}
+			}
 		}
 
 		bird->render(&shader);
 		for (auto& pillar : *spawner->spawned_pillars())
 		{
 			pillar.render(&shader);
+		}
+
+		for (auto& trigger : *spawner->spawned_triggers())
+		{
+			trigger.render(&shader);
 		}
 
 		glfwSwapBuffers(window);
@@ -173,7 +192,8 @@ void init_opengl()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void restart_game(Spawner* spawner, Bird* bird)

@@ -156,6 +156,7 @@
     <ClInclude Include="Bird.h" />
     <ClInclude Include="Pillar.h" />
     <ClInclude Include="random.h" />
+    <ClInclude Include="ScoreTrigger.h" />
     <ClInclude Include="Spawner.h" />
     <ClInclude Include="Sprite.h" />
   </ItemGroup>

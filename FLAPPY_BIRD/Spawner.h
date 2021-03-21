@@ -3,8 +3,17 @@
 #include <vector>
 #include "Pillar.h"
 #include "random.h"
+#include "ScoreTrigger.h"
+
+class ScoreTrigger;
 
 extern const int WIDTH, HEIGHT;
+const glm::vec4 PILLAR_COLOR {
+	glm::vec4(255.0f / 255.0f, 180.0f / 255.0f, 84.0f / 255.0f, 1.0f)
+};
+const glm::vec4 SCORE_TRIGGER_COLOR {
+	glm::vec4(240.0f / 255.0f, 46.0f / 255.0f, 46.0f / 255.0f, 1.0f)
+};
 class Spawner
 {
 	const float PILLAR_WIDTH;
@@ -14,6 +23,7 @@ class Spawner
 
 	Pillar* last_pillar { nullptr };
 	std::vector<Pillar> spawned {};
+	std::vector<ScoreTrigger> score_triggers {};
 public:
 	explicit Spawner(
 		float pillar_width,
@@ -45,12 +55,23 @@ public:
 				spawned.emplace_back(
 					Pillar(glm::vec2(x_pos, y_pos),
 						pillar_size,
-						glm::vec4(0.9f, 0.2f, 0.2f, 1.0f),
+						PILLAR_COLOR,
 						PILLAR_SPEED));
-				std::cout << "pillar spawn for loop hello\n";
 			}
 			last_pillar = &spawned.back();
+
+			//SCORE TRIGGERS:
+			float y_pos = HEIGHT * rand_screen_percent;
+			score_triggers.emplace_back(
+				ScoreTrigger(
+					glm::vec2(x_pos, y_pos),
+					glm::vec2(5.0f, PILLAR_GAP),
+					SCORE_TRIGGER_COLOR,
+					PILLAR_SPEED
+					)
+			);
 		}
+
 	}
 
 	std::vector<Pillar>* spawned_pillars()
@@ -58,9 +79,15 @@ public:
 		return &spawned;
 	}
 
+	std::vector<ScoreTrigger>* spawned_triggers()
+	{
+		return &score_triggers;
+	}
+
 	void reset()
 	{
 		spawned.clear();
 		last_pillar = nullptr;
+		score_triggers.clear();
 	}
 };
