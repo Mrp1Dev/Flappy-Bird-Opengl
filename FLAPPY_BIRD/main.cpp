@@ -79,6 +79,7 @@ int main()
 	float last_frame_time = glfwGetTime();
 	float last_pillar_pos { 0.0f };
 
+	spawner->spawn_borders();
 	while (!glfwWindowShouldClose(window))
 	{
 		float delta_time = glfwGetTime() - last_frame_time;

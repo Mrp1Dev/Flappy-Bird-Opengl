@@ -68,10 +68,26 @@ public:
 					glm::vec2(5.0f, PILLAR_GAP),
 					SCORE_TRIGGER_COLOR,
 					PILLAR_SPEED
-					)
+				)
 			);
 		}
 
+	}
+
+	void spawn_borders()
+	{
+		for (size_t i = 0; i < 2; i++)
+		{
+			glm::vec2 pos {
+				WIDTH / 2.0f ,
+				i == 0 ? HEIGHT : 0
+			};
+			glm::vec2 size {
+				WIDTH,
+				40.0f
+			};
+			spawned.emplace_back(Pillar(pos, size, PILLAR_COLOR, 0));
+		}
 	}
 
 	std::vector<Pillar>* spawned_pillars()
@@ -89,5 +105,6 @@ public:
 		spawned.clear();
 		last_pillar = nullptr;
 		score_triggers.clear();
+		spawn_borders();
 	}
 };
