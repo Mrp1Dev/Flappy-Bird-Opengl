@@ -39,7 +39,7 @@ public:
 			throw std::runtime_error("ERROR::FREETYPE: Failed to load font");
 		}
 
-		FT_Set_Pixel_Sizes(face, 0, 48);
+		FT_Set_Pixel_Sizes(face, 0, 256);
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		for (unsigned char c = 0; c < 128; c++)
@@ -115,4 +115,19 @@ public:
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	float get_text_width(std::string text, float scale = 1.0f)
+	{
+		float result {};
+		
+		std::string::const_iterator c;
+		for (c = text.begin(); c != text.end(); c++)
+		{
+			Character ch = characters[*c];
+
+			result += (ch.size.x + ch.bearing.x) * scale;
+		}
+		return result;
+	}
 };
+
+

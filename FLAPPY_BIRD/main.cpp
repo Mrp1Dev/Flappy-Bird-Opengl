@@ -22,6 +22,7 @@ static const int WIDTH { 1344 };
 static const int HEIGHT { 756 };
 constexpr float CLEAR_COLOR[4] { 10.0f / 255.0f, 14.0f / 255.0f, 20.0f / 255.0f, 1.0f };
 const glm::vec4 BIRD_COLOR { 89.0f / 255.0f, 194.0f / 255.0f, 255.0f / 255.0f, 1.0f };
+const glm::vec4 SCORE_COLOR { 149 / 255.0f, 230 / 255.0f, 203 / 255.0f , 1.0f };
 const Bird STARTING_BIRD(
 	glm::vec2(WIDTH / 4, HEIGHT / 2),
 	glm::vec2(30, 30),
@@ -132,11 +133,19 @@ int main()
 		{
 			trigger.render(&shader);
 		}
-	   
+
 		text_shader.use();
 		text_shader.set_mat4("projection", projection);
-		text.render_text(&text_shader, std::to_string(bird->score), glm::vec2(WIDTH/2.0f, HEIGHT - 120), 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-		
+		glm::vec2 center_aligned_pos(
+			(WIDTH - text.get_text_width(std::to_string(bird->score), 1.5f)) / 2.0f,
+			HEIGHT - 120
+		);
+		text.render_text(&text_shader,
+			std::to_string(bird->score),
+			center_aligned_pos,
+			0.5f,
+			SCORE_COLOR);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
