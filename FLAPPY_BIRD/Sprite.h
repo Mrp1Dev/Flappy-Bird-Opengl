@@ -22,6 +22,6 @@ public:
 		shader->set_vec4("color", color);
 		shader->use();
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 };

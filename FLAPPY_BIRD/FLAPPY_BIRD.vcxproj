@@ -150,6 +150,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment_shader.glsl" />
+    <None Include="text_fragment_shader.glsl" />
+    <None Include="text_vertex_shader.glsl" />
     <None Include="vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>

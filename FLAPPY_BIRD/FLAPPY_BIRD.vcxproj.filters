@@ -29,6 +29,12 @@
     <None Include="fragment_shader.glsl">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="text_vertex_shader.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="text_fragment_shader.glsl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sprite.h">
