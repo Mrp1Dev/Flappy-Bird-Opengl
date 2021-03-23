@@ -91,36 +91,28 @@ public:
 	{
 		text_shader->set_vec3("text_color", color);
 		glActiveTexture(GL_TEXTURE0);
-		//text_shader->set_int("text", 0);
+		text_shader->set_int("text", 0);
 		std::string::const_iterator c;
 		for (c = text.begin(); c != text.end(); c++)
 		{
 			Character ch = characters[*c];
 
 			float xpos = position.x + ch.bearing.x * scale;
-			float ypos = position.y - (ch.size.y - ch.bearing.y) * scale;
+			float ypos = position.y + ch.bearing.y * scale;
 			
 			float w = ch.size.x * scale;
 			float h = ch.size.y * scale;
 			xpos += w / 2.0f;
 			ypos -= h / 2.0f;
-			// update VBO for each character
-			/*float vertices[6][4] = {
-				{ xpos,     ypos + h,   0.0f, 0.0f },
-				{ xpos,     ypos,       0.0f, 1.0f },
-				{ xpos + w, ypos,       1.0f, 1.0f },
+			
 
-				{ xpos,     ypos + h,   0.0f, 0.0f },
-				{ xpos + w, ypos,       1.0f, 1.0f },
-				{ xpos + w, ypos + h,   1.0f, 0.0f }
-			};*/
 			Sprite sprite(glm::vec2(xpos, ypos), glm::vec2(w, h), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 			glBindTexture(GL_TEXTURE_2D, ch.texture_id);
 
 			sprite.render(text_shader);
 			position.x += (ch.advance >> 6) * scale;
 		}
-		//glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 };

@@ -62,7 +62,8 @@ int main()
 
 	init_opengl();
 
-	Shader shader = Shader("text_vertex_shader.glsl", "text_fragment_shader.glsl");
+	Shader text_shader = Shader("text_vertex_shader.glsl", "text_fragment_shader.glsl");
+	Shader shader = Shader("vertex_shader.glsl", "fragment_shader.glsl");
 
 	glm::mat4 projection { glm::ortho(
 		0.0f, (float)WIDTH, 0.0f, (float)HEIGHT , -1.0f, 1.0f) };
@@ -89,10 +90,9 @@ int main()
 		processInput(window, bird.get());
 		glClearColor(CLEAR_COLOR[0], CLEAR_COLOR[1], CLEAR_COLOR[2], CLEAR_COLOR[3]);
 		glClear(GL_COLOR_BUFFER_BIT);
-		shader.set_mat4("projection", projection);
 
-		text.render_text(&shader, "This is sample text", glm::vec2(25.0f, 25.0f), 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-		text.render_text(&shader, "(C) LearnOpenGL.com", glm::vec2(540.0f, 570.0f), 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+		shader.use();
+		shader.set_mat4("projection", projection);
 		if (game_state == GameState::Running)
 		{
 			bird->update(delta_time);
@@ -132,7 +132,11 @@ int main()
 		{
 			trigger.render(&shader);
 		}
-
+	   
+		text_shader.use();
+		text_shader.set_mat4("projection", projection);
+		text.render_text(&text_shader, std::to_string(bird->score), glm::vec2(WIDTH/2.0f, HEIGHT - 120), 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -171,12 +175,13 @@ void init_opengl()
 {
 	float vertices[] {
 		//positions			
-		-1.0f, 1.0f,   0.0f, 1.0f, //top left
-		1.0f, 1.0f,    1.0f, 1.0f,  //top right
-		1.0f, -1.0f,   1.0f, 0.0f,  //bottom right
 
 		-1.0f, 1.0f,   0.0f, 1.0f, //top left
 		-1.0f, -1.0f,  0.0f, 0.0f, //bottom left
+		1.0f, -1.0f,   1.0f, 0.0f,  //bottom right
+
+		-1.0f, 1.0f,   0.0f, 1.0f, //top left
+		1.0f, 1.0f,    1.0f, 1.0f,  //top right
 		1.0f, -1.0f,   1.0f, 0.0f,  //bottom right
 	};
 
@@ -187,7 +192,7 @@ void init_opengl()
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(
-		GL_ARRAY_BUFFER, sizeof(vertices) * 6 * 4, &vertices, GL_STATIC_DRAW);
+		GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
 	//vertices
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
 	/*glGenBuffers(1, &EBO);
