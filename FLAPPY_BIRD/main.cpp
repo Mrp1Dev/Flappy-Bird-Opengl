@@ -18,8 +18,8 @@ void init_opengl();
 void restart_game(Spawner* spawner, Bird* bird);
 
 static const float GRAVITY { 1000.0f };
-static const int WIDTH { 1344 };
-static const int HEIGHT { 756 };
+static const int WIDTH { 1920 };
+static const int HEIGHT { 1000 };
 constexpr float CLEAR_COLOR[4] { 10.0f / 255.0f, 14.0f / 255.0f, 20.0f / 255.0f, 1.0f };
 const glm::vec4 BIRD_COLOR { 89.0f / 255.0f, 194.0f / 255.0f, 255.0f / 255.0f, 1.0f };
 const glm::vec4 SCORE_COLOR { 149 / 255.0f, 230 / 255.0f, 203 / 255.0f , 1.0f };
@@ -32,7 +32,8 @@ const Bird STARTING_BIRD(
 enum class GameState
 {
 	Started,
-	Running
+	Running,
+	Ended
 };
 
 GameState game_state { GameState::Started };
@@ -75,13 +76,21 @@ int main()
 		);
 	std::unique_ptr<Spawner> spawner = std::make_unique<Spawner>(
 		60.0f,
-		250.0f,
-		380.0f,
-		320.0f
+		165.0f,
+		385.0f,
+		350.0f
 		);
 	float last_frame_time = glfwGetTime();
 	float last_pillar_pos { 0.0f };
-	TextRenderer text("Roboto-Thin.ttf");
+	std::unique_ptr<TextRenderer> score_renderer {
+		std::make_unique<TextRenderer>("Roboto-Thin.ttf")
+	};
+
+	std::unique_ptr<TextRenderer> highscore_renderer {
+		std::make_unique<TextRenderer>("Roboto-Black.ttf")
+	};
+
+	int highscore { 0 };
 	spawner->spawn_borders();
 	while (!glfwWindowShouldClose(window))
 	{
@@ -104,7 +113,16 @@ int main()
 				bool collided = bird->check_collision(&pillar);
 				if (collided)
 				{
-					restart_game(spawner.get(), bird.get());
+					game_state = GameState::Ended;
+					bird->burst(
+						64,
+						0.05f,
+						0.45f,
+						600.0f,
+						1250.0f,
+						0.1f,
+						0.8f
+					);
 				}
 			}
 
@@ -122,6 +140,27 @@ int main()
 				}
 			}
 		}
+		if (game_state == GameState::Ended)
+		{
+			bool should_restart { true };
+			for (auto& particle : bird->particles)
+			{
+				if (!particle.dead())
+				{
+					should_restart = false;
+					break;
+				}
+			}
+			if (should_restart) restart_game(spawner.get(), bird.get());
+		}
+
+		for (auto& particle : bird->particles)
+		{
+			particle.update(delta_time);
+			particle.render(&shader);
+		}
+
+		if (highscore < bird->score) highscore = bird->score;
 
 		bird->render(&shader);
 		for (auto& pillar : *spawner->spawned_pillars())
@@ -135,17 +174,30 @@ int main()
 		}
 
 		text_shader.use();
+		constexpr float TEXT_SCALE = 0.35f;
 		text_shader.set_mat4("projection", projection);
 		glm::vec2 center_aligned_pos(
-			(WIDTH - text.get_text_width(std::to_string(bird->score), 1.5f)) / 2.0f,
+			(WIDTH - score_renderer->get_text_width(std::to_string(bird->score), TEXT_SCALE)) / 2.0f,
 			HEIGHT - 120
 		);
-		text.render_text(&text_shader,
+		score_renderer->render_text(
+			&text_shader,
 			std::to_string(bird->score),
 			center_aligned_pos,
-			0.5f,
-			SCORE_COLOR);
-
+			TEXT_SCALE,
+			SCORE_COLOR
+		);
+		center_aligned_pos = glm::vec2(
+			(WIDTH - score_renderer->get_text_width(std::to_string(highscore), TEXT_SCALE * 0.4f)) / 2.0f,
+			HEIGHT - 165
+		);
+		highscore_renderer->render_text(
+			&text_shader,
+			std::to_string(highscore),
+			center_aligned_pos,
+			TEXT_SCALE * 0.4f,
+			SCORE_COLOR
+		);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -216,8 +268,11 @@ void restart_game(Spawner* spawner, Bird* bird)
 {
 	game_state = GameState::Started;
 	spawner->reset();
+	auto particles = std::move(bird->particles);
 	*bird = STARTING_BIRD;
+	bird->particles = std::move(particles);
 }
+
 
 
 
